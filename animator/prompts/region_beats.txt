@@ -1,0 +1,14 @@
+NARRATION BEATS:
+
+The narration is spoken as these numbered beats:
+{numbered}
+
+- Set `beat` on every region to the number of the beat whose sentence talks
+  about it. The region is drawn exactly while that sentence is spoken.
+- An icon and its own caption form ONE region: one box enclosing both.
+- The heading at the top belongs to beat 1 and draws first.
+- An arrow belongs to the beat of the element it points TO, unless that
+  element is already drawn, in which case it belongs to the beat of the
+  element it comes from.
+- Every beat should get at least one region when its element is visible.
+- reveal_order must follow beat order.

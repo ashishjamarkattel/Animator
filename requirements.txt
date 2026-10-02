@@ -1,0 +1,11 @@
+numpy>=1.24
+opencv-python-headless>=4.8
+scikit-image>=0.21
+scipy>=1.10
+Pillow>=10
+onnxruntime>=1.16
+pydantic>=2
+
+# --prompt / --detect-regions (Gemini)
+google-genai>=1.0
+python-dotenv>=1.0

@@ -1,0 +1,4 @@
+A whiteboard explainer frame. Heading at the top center: "{title}".
+It contains exactly these {count} separate elements:
+{elements}
+Layout: {layout}

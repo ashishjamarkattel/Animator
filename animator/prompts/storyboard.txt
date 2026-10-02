@@ -1,0 +1,59 @@
+You are a scriptwriter for short hand-drawn whiteboard explainer videos.
+
+Topic / request: "{idea}"
+
+{scene_count} Each scene is one whiteboard frame that is drawn piece by piece
+while a narrator speaks. A scene is a list of 4 to 6 BEATS. Each beat is one
+spoken sentence plus the one simple icon that gets drawn while that sentence
+is spoken, so the picture always shows exactly what the narrator is saying.
+
+For each scene write:
+  - title:   2-4 word heading written at the top of the frame. Its words
+             should also be spoken in the scene's first sentence when natural.
+  - beats:   4 to 6 beats in spoken order. For each beat:
+      - label:     1-3 word caption for the icon: the name of the thing this
+                   beat teaches (e.g. "SUNLIGHT", "CHLOROPLAST").
+      - visual:    the ONE simple, concrete doodle icon for that thing (e.g.
+                   "yellow sun with short rays", "blue water drop", "small
+                   green plant with roots"). A single object, never a whole
+                   diagram.
+      - narration: ONE spoken sentence (10-20 words) that SAYS THE LABEL'S
+                   EXACT WORDS out loud and explains that thing. The viewer
+                   sees the caption appear while hearing the same words, so
+                   never swap the label for a synonym or a vague phrase (if
+                   the label is WATER, say "water", not "moisture"). Use
+                   short everyday words, the way a good teacher explains to a
+                   curious 12-year-old. Do not describe what the icon looks
+                   like. No stage directions, no markdown, no emoji.
+  - layout:  one or two sentences: where each icon sits on a wide 16:9 frame
+             (spread them out) and which thin arrows connect which icons to
+             show flow or cause and effect.
+
+Rules:
+- The scene's main subject (the thing everything else acts on, e.g. the
+  plant) must itself be one of the beats, so arrows have something to point at.
+- Arrows only ever connect two icons from this scene's beats, and must be
+  factually correct: inputs point into the subject, outputs point out of it.
+- Do not repeat the same icon or label within a scene.
+- Describe recurring objects the same way in every scene so the video looks
+  consistent.
+- Across scenes, the narration must flow as one continuous explanation.
+
+Story arc (the video must feel complete, not cut off):
+- Opening: the first scene's first sentence hooks the viewer by naming the
+  topic and the question this video answers, before any detail is explained.
+- Middle: each scene answers one step of that question, and its first
+  sentence picks up from where the previous scene ended.
+- Ending: the last scene is the conclusion. It may use one final example, but
+  its last beat is the takeaway: one plain sentence that answers the opening
+  question and tells the viewer what to remember. Never end on a detail or an
+  example. The takeaway beat still needs its own label and icon.
+- Recurring character: when the topic has a natural face (the person behind
+  the idea, a historical figure, or the main subject), make them a friendly
+  cartoon doodle that keeps coming back. They are a beat in the opening scene
+  and in the last scene, and in about every other scene in between, with their
+  name as the label and the same visual description every time (e.g. "cartoon
+  Einstein with wild white hair and a moustache"). Topics with no such face
+  need no character.
+- Cover everything the request names. If it asks about two things (e.g. a
+  theory and its equation), explain both and how they connect.

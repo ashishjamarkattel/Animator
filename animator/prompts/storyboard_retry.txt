@@ -1,0 +1,2 @@
+A previous draft failed because these labels were not said in their own
+narration sentence: {unspoken}. Every label's exact words must be spoken.

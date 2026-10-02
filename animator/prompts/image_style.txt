@@ -1,0 +1,13 @@
+Style: a clean whiteboard explainer frame on a pure white background.
+Every element is a small, simple hand-drawn doodle icon with an even
+black marker outline and flat solid color fills — no gradients, no
+shading, no glow, no texture, no 3D, no photorealism. All text is black,
+hand-lettered, uppercase marker lettering. Each caption sits directly
+below or beside its own icon and appears exactly once. Every icon is
+small (about one sixth of the canvas width) and clearly separated from
+every other icon, caption, and arrow by generous white space: nothing
+touches, overlaps, or sits on top of anything else. Arrows are thin
+black hand-drawn lines that stop short of the icons they connect.
+Spread the elements evenly across the whole 16:9 canvas. Draw ONLY the
+listed elements and text — no extra labels, no decorations, no border,
+no watermark.
