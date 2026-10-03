@@ -32,3 +32,9 @@ htmlcov/
 /einstein_emc2.storyboard/
 *.md
 !README.md
+
+# web UI output
+/outputs/
+
+
+frontend

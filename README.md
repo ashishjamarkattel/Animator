@@ -81,6 +81,17 @@ python -m animator --prompt "How photosynthesis works" -o photosynthesis.mp4
 | `--gemini-model`, `--image-model`, `--tts-model` | Override the Gemini models |
 | `-v` | Show progress logs |
 
+### From the browser
+
+The web app has Google sign-in, credits and a library of your videos. It uses Supabase for accounts and storage, and this API server to generate videos:
+
+```bash
+python -m animator.api            # API on http://127.0.0.1:8000 (docs at /api/docs)
+cd frontend && npm run dev        # web app on http://localhost:5173
+```
+
+Setup for each is in [`frontend/README.md`](frontend/README.md) and [`animator/api/README.md`](animator/api/README.md).
+
 ### From your own images
 
 No API key is needed for these.
@@ -131,6 +142,8 @@ animator/
   engine.py     drawing engine (ordering, stroke tracing, fills)
   render.py     scenes → MP4 via FFmpeg
   cli.py        command line
+  api/          HTTP API for the web app (python -m animator.api)
+frontend/       React web app (Supabase sign-in, studio)
 examples/       sample videos
 ```
 
