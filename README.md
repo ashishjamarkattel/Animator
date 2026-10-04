@@ -142,3 +142,16 @@ examples/       sample videos
 - **`needs GEMINI_API_KEY`:** put the key in `.env`, or `export GEMINI_API_KEY=...`.
 - **429 / rate-limit warnings:** these calls are retried automatically with backoff. On the free tier, use fewer scenes with `--scenes 3`.
 - **A caption appears before it is spoken:** run with `--save-storyboard` and check `scene_XX.regions.json`. Each region's `beat` decides when it draws.
+
+
+## Upstream
+
+This project is a heavily extended fork of
+[masihsultani/whiteboard-animator](https://github.com/masihsultani/whiteboard-animator).
+
+Credit goes to Masih Sultani and the original contributors for the underlying
+whiteboard animation engine.
+
+This repository adds an AI-driven pipeline:
+
+Prompt → Storyboard → Images → Narration → Region Detection → Animation → MP4
