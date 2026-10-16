@@ -1,6 +1,29 @@
-# Animator
+<div align="center">
 
-**Type an idea, get a narrated hand-drawn whiteboard explainer video.**
+<img src="assets/logo.svg" alt="" width="120">
+
+<h1>Animator</h1>
+
+<h3>Type an idea, get a narrated whiteboard video.</h3>
+
+<p>One prompt in, a hand-drawn explainer out. Script, drawings, voice and animation included.</p>
+
+<p>
+  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/powered%20by-Gemini-8E75B2?logo=googlegemini&logoColor=white" alt="Powered by Gemini">
+  <img src="https://img.shields.io/badge/requires-FFmpeg-007808?logo=ffmpeg&logoColor=white" alt="Requires FFmpeg">
+  <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker ready">
+</p>
+
+<p>
+  <a href="#setup">Quick Start</a> ·
+  <a href="#examples">Examples</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="#customise-the-style">Customise</a>
+</p>
+
+</div>
 
 ![How wings create lift, drawing itself while the narrator speaks](examples/plane_flight.gif)
 
