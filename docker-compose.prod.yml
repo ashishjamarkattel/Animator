@@ -1,0 +1,36 @@
+# Production: Caddy serves https://$DOMAIN, sending /api/* to the API and everything else to the web app.
+# Only Caddy is reachable from outside. Set DOMAIN in .env, then:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+services:
+  api:
+    ports: !reset []
+    environment:
+      # the web app and API share one origin, so this is the only origin the API needs to allow
+      API_ALLOWED_ORIGINS: https://${DOMAIN:?set DOMAIN in .env}
+
+  web:
+    build:
+      args:
+        VITE_API_URL: https://${DOMAIN:?set DOMAIN in .env}
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.10-alpine
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates: keep this volume so they aren't requested again
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

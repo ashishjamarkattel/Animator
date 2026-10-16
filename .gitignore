@@ -18,8 +18,9 @@ tmp/
 *.storyboard/
 *.mp4.regions.*.json
 
-# local env files (env.example stays tracked)
+# local env files (env.example and frontend/.env.example stay tracked)
 .env.*
+!.env.example
 
 # tool caches and editors
 .mypy_cache/
@@ -37,4 +38,5 @@ htmlcov/
 /outputs/
 
 
-frontend
+# frontend/ is tracked; its own .gitignore skips node_modules, dist and .env
+# frontend

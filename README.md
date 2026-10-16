@@ -12,18 +12,20 @@ One command writes the script, draws each scene, records the narration, and anim
 
 ## Examples
 
-All three were generated from a single prompt each, with no editing afterwards.
+All four were generated from a single prompt each, with no editing afterwards.
 
 <table>
   <tr>
     <td><a href="examples/einstein_emc2.mp4"><img src="examples/einstein_emc2.gif" alt="Einstein's famous equation explained" width="100%"></a></td>
     <td><a href="examples/photosynthesis.mp4"><img src="examples/photosynthesis.gif" alt="How photosynthesis works" width="100%"></a></td>
     <td><a href="examples/plane_flight.mp4"><img src="examples/plane_flight.gif" alt="How wings create lift" width="100%"></a></td>
+    <td><a href="examples/how_bees_make_honey.mp4"><img src="examples/how_bees_make_honey.gif" alt="How bees make honey" width="100%"></a></td>
   </tr>
   <tr>
     <td align="center"><b>Einstein's Famous Equation</b><br>4 scenes · 1:39<br><code>examples/einstein_emc2.mp4</code></td>
     <td align="center"><b>How Photosynthesis Works</b><br>5 scenes · 1:50<br><code>examples/photosynthesis.mp4</code></td>
     <td align="center"><b>How Wings Create Lift</b><br>5 scenes · 1:36<br><code>examples/plane_flight.mp4</code></td>
+    <td align="center"><b>How Bees Make Honey</b><br>4 scenes · 1:41<br><code>examples/how_bees_make_honey.mp4</code></td>
   </tr>
 </table>
 
@@ -63,6 +65,50 @@ cp env.example .env                # then paste your key into .env
 ```
 
 Get a key at [Google AI Studio](https://aistudio.google.com/apikey). The `.env` file is loaded automatically and is git-ignored.
+
+### With Docker
+
+Runs the web app and its API together. You need Docker, plus the two `.env` files from setup: the repo's
+`.env` (Supabase server settings) and `frontend/.env` (see [frontend/README.md](frontend/README.md)).
+
+```bash
+docker compose up --build
+```
+
+| | Address |
+|---|---|
+| Web app | http://localhost:5173 |
+| API | http://localhost:8000 |
+
+The web app keeps port 5173 so Supabase sign-in redirects work unchanged. Stop `npm run dev` and any local
+API server first, since they use the same ports. The `frontend/.env` values are built into the web app,
+so run `docker compose up --build` again after changing them.
+
+The command line works in the container too:
+
+```bash
+docker compose run --rm -v "$PWD/outputs:/out" api \
+  python -m animator --prompt "How do planes fly?" -o /out/plane.mp4
+```
+
+### Deploying to a server
+
+`docker-compose.prod.yml` adds [Caddy](https://caddyserver.com), which serves everything on one HTTPS
+address and gets the certificate itself: `/api/*` goes to the API, everything else to the web app.
+Any Linux server with Docker works; Oracle Cloud's Always Free Ampere VM is enough.
+
+1. Point your domain's DNS `A` record at the server's public IP.
+2. On the server: `git clone` this repo, then run `deploy/setup-vm.sh` once. On Oracle, also allow
+   TCP 80 and 443 in the subnet's security list.
+3. Copy your `.env` and `frontend/.env` to the server, and add `DOMAIN=yourdomain.com` to `.env`.
+4. Start it:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+   ```
+5. In Supabase, add `https://yourdomain.com` under **Authentication → URL configuration** (Site URL and
+   redirect URLs).
+
+To update later: `git pull`, then run the same `up -d --build` command.
 
 ## Usage
 
@@ -134,6 +180,9 @@ animator/
   api/          HTTP API for the web app (python -m animator.api)
 frontend/       React web app (Supabase sign-in, studio)
 examples/       sample videos
+Dockerfile      API image; frontend/Dockerfile builds the web app
+docker-compose.yml  runs both; docker-compose.prod.yml adds HTTPS for a server
+deploy/         Caddy config and one-time server setup
 ```
 
 ## Troubleshooting

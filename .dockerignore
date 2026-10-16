@@ -1,0 +1,19 @@
+# Patterns are relative to the repo root.
+.git
+.venv
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+
+# server secrets are passed at run time, never copied in (frontend/.env stays: its VITE_* values are public)
+.env
+.env.*
+
+frontend/node_modules
+frontend/dist
+
+# local outputs
+outputs
+tmp
+*.storyboard
+*.mp4

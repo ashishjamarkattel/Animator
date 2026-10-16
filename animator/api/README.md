@@ -1,8 +1,12 @@
 # Animator API
 
-The FastAPI server the web app (`frontend/`) calls to generate videos. Accounts, credits and the list of
-videos live in Supabase. This server does the work the browser can't: it checks credits, runs the
-storyboard pipeline, uploads the MP4 to storage and updates the video's status.
+The FastAPI server the web app (`frontend/`) calls to generate videos. Accounts and the list of videos
+live in Supabase. This server does the work the browser can't: it runs the storyboard pipeline, uploads
+the MP4 to storage and updates the video's status.
+
+Users bring their own Gemini API key. The browser keeps it and sends it with each generate request; the
+server checks it, uses it for that one video, and never stores or logs it. The server needs no Gemini key
+of its own.
 
 ```bash
 pip install -r requirements.txt
@@ -12,35 +16,31 @@ python -m animator.api --port 9000 --reload
 
 ## Configuration
 
-Set these in the repo's `.env` file, next to `GEMINI_API_KEY`:
+Set these in the repo's `.env` file:
 
 | Variable | Required | What it is |
 |---|---|---|
-| `GEMINI_API_KEY` | yes | Same key the command line uses |
 | `SUPABASE_URL` | yes | `https://<project>.supabase.co` |
 | `SUPABASE_SECRET_KEY` | yes | The project's **secret** key (`sb_secret_…`, or the legacy `service_role` key). It bypasses row-level security, so keep it on the server only. The frontend uses the publishable key. |
 | `API_ALLOWED_ORIGINS` | no | Comma-separated frontend URLs allowed to call the API. Default `http://localhost:5173` |
 | `API_MAX_CONCURRENT_JOBS` | no | Videos rendered at the same time; the rest wait their turn. Default `1` |
-| `API_CREDITS_PER_SCENE` | no | Default `2` |
-| `API_AUTO_SCENE_ESTIMATE` | no | Scenes charged up front when the scene count is "Auto". Default `6` |
 
-The database needs `frontend/supabase/schema.sql`, which includes the `spend_credits` and `refund_credits` functions this server calls.
+The database needs `frontend/supabase/schema.sql`.
 
 ## How a video gets made
 
 ```
 browser                          Supabase                       this API
    │ insert videos row ─────────► status = queued
-   │ POST /api/generate ───────────────────────────────────────► check token and owner
+   │ POST /api/generate + key ─────────────────────────────────► check token, owner and Gemini key
    │                                status = generating ◄─────── claim the row (queued only)
-   │                                credits − estimate ◄──────── spend_credits
    │ ◄──────────────────────────────────────────── 202 Accepted
-   │                                                             render (Gemini + local drawing)
+   │                                                             render with the user's key
    │                                videos/<user>/<id>.mp4 ◄──── upload
-   │ ◄── realtime update ────────── status = ready ◄──────────── finish, refund unused scenes
+   │ ◄── realtime update ────────── status = ready ◄──────────── finish
 ```
 
-If anything fails after the 202, the video is marked `failed` with a short reason the user can act on, and the full charge is refunded.
+If anything fails after the 202, the video is marked `failed` with a short reason the user can act on.
 
 ## Routes
 
@@ -51,7 +51,7 @@ All routes are under `/api`. Errors are JSON in the form `{"detail": "<message>"
 No sign-in needed. Reports whether this server can generate videos.
 
 ```json
-{ "status": "ok", "ffmpeg": true, "gemini_configured": true, "supabase_configured": true }
+{ "status": "ok", "ffmpeg": true, "supabase_configured": true }
 ```
 
 `status` is `"degraded"` when any check is false.
@@ -64,7 +64,7 @@ Starts rendering a video the browser has already inserted with `status = 'queued
 Authorization: Bearer <Supabase access token>
 Content-Type: application/json
 
-{ "video_id": "1b0c…" }
+{ "video_id": "1b0c…", "gemini_api_key": "<the user's Gemini API key>" }
 ```
 
 The prompt, scene count, voice and quality are read from the video's row, not from this request, so they can't be changed after the row is written.
@@ -72,18 +72,18 @@ The prompt, scene count, voice and quality are read from the video's row, not fr
 **202 Accepted**
 
 ```json
-{ "video_id": "1b0c…", "status": "generating", "credits_charged": 12 }
+{ "video_id": "1b0c…", "status": "generating" }
 ```
 
-Cost is `scenes × 2` credits, or `6 × 2` when scenes is Auto. Unused scenes are refunded when the video finishes.
+Before starting, the server makes one free call to Gemini to check the key, so a wrong key fails at once.
 
 | Status | When |
 |---|---|
+| 400 | Gemini rejected the key. The video is marked `failed` with the same message |
 | 401 | No token, or the token is invalid or expired |
-| 402 | Not enough credits. The video is marked `failed` with the same message |
 | 404 | The video doesn't exist or belongs to someone else |
-| 409 | The video isn't `queued`; it's already generating, ready or failed. Nothing is charged |
-| 422 | The body isn't `{"video_id": "<string>"}` |
+| 409 | The video isn't `queued`; it's already generating, ready or failed |
+| 422 | The body is missing `video_id` or `gemini_api_key` |
 
 ### `GET /api/videos/{video_id}`
 
@@ -122,7 +122,8 @@ api/
   app.py            builds the app: CORS, then each router under /api
   settings.py       environment variables, read once
   auth.py           Bearer token → Supabase user (dependency for protected routes)
-  supabase.py       every call to Supabase: users, video rows, credits, storage
+  gemini_key.py     checks a user's Gemini key before a video starts
+  supabase.py       every call to Supabase: users, video rows, storage
   schemas.py        request and response bodies
   jobs.py           one generation job: wait for a slot → render → upload → finish
   routers/

@@ -3,9 +3,10 @@
     STEP 1  wait for a free slot (generation is CPU-heavy, so jobs run a few at a time)
     STEP 2  render the video from the prompt with the existing storyboard pipeline
     STEP 3  upload the MP4 to the private "videos" storage bucket
-    STEP 4  mark the video ready, and refund credits for scenes that weren't used
+    STEP 4  mark the video ready
 
-Any failure marks the video failed with a readable reason and refunds the full charge.
+Every Gemini call uses the user's own API key, which lives only in memory for this job.
+Any failure marks the video failed with a readable reason.
 """
 
 from __future__ import annotations
@@ -34,22 +35,21 @@ def _slots() -> threading.BoundedSemaphore:
     return threading.BoundedSemaphore(get_settings().max_concurrent_jobs)
 
 
-def run_job(video: dict, credits_charged: int) -> None:
+def run_job(video: dict, api_key: str) -> None:
     try:
         with _slots():  # STEP 1
             with tempfile.TemporaryDirectory() as temp_dir:
                 output = Path(temp_dir) / "video.mp4"
-                durations = _render(video, output)  # STEP 2
+                durations = _render(video, output, api_key)  # STEP 2
                 storage_path = f"{video['user_id']}/{video['id']}.mp4"
                 supabase.upload_video(storage_path, output)  # STEP 3
-        _finish(video, storage_path, durations, credits_charged)  # STEP 4
+        _finish(video, storage_path, durations)  # STEP 4
     except Exception as exc:
         log.exception("video %s failed", video["id"])
         supabase.update_video(video["id"], {"status": "failed", "error": _reason(exc)})
-        supabase.refund_credits(video["user_id"], credits_charged)
 
 
-def _render(video: dict, output: Path) -> list[float]:
+def _render(video: dict, output: Path, api_key: str) -> list[float]:
     options = StoryboardOptions(
         idea=video["prompt"],
         output=output,
@@ -61,23 +61,23 @@ def _render(video: dict, output: Path) -> list[float]:
         voice=video["voice"],
         num_scenes=video["scenes"],
     )
-    return run_storyboard(genai.Client(api_key=get_settings().gemini_api_key), options)
+    return run_storyboard(genai.Client(api_key=api_key), options)
 
 
-def _finish(video: dict, storage_path: str, durations: list[float], credits_charged: int) -> None:
+def _finish(video: dict, storage_path: str, durations: list[float]) -> None:
     supabase.update_video(
         video["id"],
         {"status": "ready", "storage_path": storage_path, "duration_seconds": round(sum(durations), 2), "error": None},
     )
-    used = len(durations) * get_settings().credits_per_scene
-    supabase.refund_credits(video["user_id"], credits_charged - used)
 
 
 def _reason(exc: Exception) -> str:
     """A short message the user sees in their video list; details stay in the server log."""
     text = str(exc).lower()
     if "429" in text or "resource_exhausted" in text or "quota" in text:
-        return "The AI service is busy. Try again in a few minutes."
+        return "Your Gemini API key hit its rate limit or quota. Try again later, or check your plan in Google AI Studio."
+    if "api_key_invalid" in text or "api key" in text or "permission_denied" in text:
+        return "Gemini rejected your API key partway through. Check the key, and that its project can use image and speech models."
     if "safety" in text or "blocked" in text:
         return "This topic was blocked by the AI's safety filter. Try rephrasing it."
     return "Generation failed. Try again, or try a shorter prompt."

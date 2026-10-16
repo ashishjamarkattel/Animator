@@ -1,0 +1,20 @@
+# docker compose up --build
+#   web app  http://localhost:5173  (the address Supabase already allows for sign-in redirects)
+#   API      http://localhost:8000  (what VITE_API_URL in frontend/.env points to)
+services:
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped

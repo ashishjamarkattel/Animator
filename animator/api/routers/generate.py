@@ -4,15 +4,15 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from .. import supabase
 from ..auth import User, current_user
+from ..gemini_key import KeyCheckFailed, check_key
 from ..jobs import run_job
 from ..schemas import GenerateRequest, GenerateResponse
-from ..settings import get_settings
 
 router = APIRouter(tags=["generate"])
 
 ERRORS = {
+    400: {"description": "Gemini rejected the API key; the video is marked failed"},
     401: {"description": "Missing, invalid or expired Supabase access token"},
-    402: {"description": "Not enough credits; the video is marked failed"},
     404: {"description": "No such video, or it belongs to someone else"},
     409: {"description": "The video isn't queued (already generating, ready or failed)"},
 }
@@ -23,17 +23,21 @@ def generate(request: GenerateRequest, background: BackgroundTasks, user: User =
     video = supabase.get_video(request.video_id)
     if video is None or video["user_id"] != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Video not found.")
-
-    # claiming the row (queued -> generating) first means a repeated request can't charge twice
-    claimed = supabase.update_video(video["id"], {"status": "generating"}, only_if_status="queued")
-    if claimed is None:
+    if video["status"] != "queued":
         raise HTTPException(status.HTTP_409_CONFLICT, f"This video is already {video['status']}.")
 
-    settings = get_settings()
-    cost = (video["scenes"] or settings.auto_scene_estimate) * settings.credits_per_scene
-    if not supabase.spend_credits(user.id, cost):
-        supabase.update_video(video["id"], {"status": "failed", "error": f"Not enough credits: this video needs {cost}."})
-        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, f"Not enough credits: this video needs {cost}.")
+    # check the key before starting, so a typo fails in a second instead of after the storyboard step
+    api_key = request.gemini_api_key.get_secret_value()
+    try:
+        check_key(api_key)
+    except KeyCheckFailed as exc:
+        supabase.update_video(video["id"], {"status": "failed", "error": str(exc)}, only_if_status="queued")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 
-    background.add_task(run_job, claimed, cost)
-    return GenerateResponse(video_id=video["id"], status="generating", credits_charged=cost)
+    # claiming the row (queued -> generating) means a repeated request can't start it twice
+    claimed = supabase.update_video(video["id"], {"status": "generating"}, only_if_status="queued")
+    if claimed is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This video has already started.")
+
+    background.add_task(run_job, claimed, api_key)
+    return GenerateResponse(video_id=video["id"], status="generating")

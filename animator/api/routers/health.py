@@ -15,7 +15,6 @@ def health() -> HealthResponse:
     settings = get_settings()
     checks = {
         "ffmpeg": shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None,
-        "gemini_configured": bool(settings.gemini_api_key),
         "supabase_configured": bool(settings.supabase_url and settings.supabase_secret_key),
     }
     return HealthResponse(status="ok" if all(checks.values()) else "degraded", **checks)

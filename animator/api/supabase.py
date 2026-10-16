@@ -47,22 +47,6 @@ def update_video(video_id: str, fields: dict[str, Any], *, only_if_status: str |
     return rows[0] if rows else None
 
 
-def spend_credits(user_id: str, amount: int) -> bool:
-    """Atomically takes `amount` credits; False if the user doesn't have enough."""
-    with _client() as client:
-        response = client.post("/rest/v1/rpc/spend_credits", json={"p_user": user_id, "p_amount": amount})
-    response.raise_for_status()
-    return bool(response.json())
-
-
-def refund_credits(user_id: str, amount: int) -> None:
-    if amount <= 0:
-        return
-    with _client() as client:
-        response = client.post("/rest/v1/rpc/refund_credits", json={"p_user": user_id, "p_amount": amount})
-    response.raise_for_status()
-
-
 def upload_video(storage_path: str, file: Path) -> None:
     with _client() as client, file.open("rb") as body:
         response = client.post(

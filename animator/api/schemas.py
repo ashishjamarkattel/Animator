@@ -4,19 +4,20 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, SecretStr
 
 VideoStatus = Literal["queued", "generating", "ready", "failed"]
 
 
 class GenerateRequest(BaseModel):
     video_id: str
+    # the user's own key: used for this one video, never stored or logged
+    gemini_api_key: SecretStr = Field(min_length=1)
 
 
 class GenerateResponse(BaseModel):
     video_id: str
     status: VideoStatus
-    credits_charged: int
 
 
 class VideoResponse(BaseModel):
@@ -35,5 +36,4 @@ class VideoResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     ffmpeg: bool
-    gemini_configured: bool
     supabase_configured: bool

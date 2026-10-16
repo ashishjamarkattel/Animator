@@ -1,0 +1,17 @@
+# One HTTPS site for everything. Caddy gets and renews the certificate for $DOMAIN on its own.
+{$DOMAIN} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:80
+	}
+}
+
+# www.$DOMAIN redirects to the main address (its DNS record must point here too)
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
